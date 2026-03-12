@@ -1,0 +1,22 @@
+做一个proxy服务后台echo-engine-proxy（下面简称为“proxy”），负责建立多个bubble-wrap（https://github.com/containers/bubblewrap）沙箱，每沙箱中跑1个opencode serve（https://opencode.ai/docs/zh-cn/server/），proxy透传对opencode serve的请求，每个请求都在其post url中增加2个字段：domainID和sandboxID用来唯一标识一个沙箱，设计为2个字段的原因是最大程度避免应用者重复，合法的domainID白名单会人工配置到redis，本proxy启动后会抓取一次，修改时要有机制更新到proxy，每次请求，proxy都会判断一下是否是白名单中的domainID，不是则拒绝
+
+opencode支持多个project，暂时我们写死为一个default project，即暂不支持“一个沙箱中的一个opencode serve对应多个project”，所以project名不用传入，每个project下多个session由opencode serve的api原生接口自行管理。
+
+多点echo-engine-proxy共享一块nas盘，便于一个点上的沙箱关闭后，在另一个点恢复，每个沙箱的根目录为：
+/nas盘/domainID/sandboxID
+沙箱中的路径安排如下，比如opencode的工程级配置：
+/defaultProject/.config/.opencode/opencode.json
+即opencode是在cd /defaultProject/ 后启动，即/defaultProject/ 是opencode的workspace
+workspace中的各种用户文件也都放到 /defaultProject/，从沙箱外面看是/nas盘/domainID/sandboxID/defaultProject/
+
+上游系统为echo-agent，负责传入domainID和sandboxID，每请求都会去redis查一下对应沙箱是否活着，在proxy的哪个分机（ip）
+如果活着则直接去目标ip，如果没有查到，则转发请求给一台沙箱少的proxy机
+上游系统echo-agent与echo-engine-proxy保持心跳，即echo-agent知道哪些台proxy ip真实在线，不会把请求给到不在线的proxy分机。
+
+echo-engine-proxy收到请求，看本地对应沙箱（根据domainID、sandboxID查本地）是否活着，如果活着则直接转发请求，若没找到则直接创建一个沙箱、拉起open serve，resume sessions（这里有个设计漏洞，就是不知道该resume一个project下的哪个session，要研究下opencode serve暴漏出来的api是否都含有sessionid），记录沙箱信息和proxy本机ip信息到redis，并转发请求进去
+
+proxy要求管理接口兜底，比如杀掉、启动某个沙箱的接口，未来可能上到web ui控制
+
+要求有文件操作web ui打通到上述nas盘，这个文件上传下载web ui，跟echo-engine-proxy没关系，由echo-agent自行实现
+
+上述设计，旨在确保proxy的轻量，基本是纯透传opencode serve接口，增加沙箱的domainID和sandboxID辨识。
