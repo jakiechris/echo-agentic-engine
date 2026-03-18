@@ -1,0 +1,31 @@
+{
+    "redis": {
+        "host": "106.55.167.184",
+        "port": 6379,
+        "password": "123456",
+        "db": 0
+    },
+    "nas": {
+        "rootPath": "./testworkspace"
+    },
+    "engine": {
+        "port": 8000,
+        "maxSandboxes": 50,
+        "logLevel": "INFO"
+    },
+    "sandbox": {
+        "portRange": {
+            "min": 30001,
+            "max": 40000
+        },
+        "idleTimeout": 3600,
+        "openCodeCommand": "/usr/local/bin/opencode"
+    },
+    "tasks": {
+        "healthCheckInterval": 30,
+        "idleCheckInterval": 60,
+        "configSyncInterval": 300,
+        "healthCheckTimeout": 5,
+        "maxRetries": 3
+    }
+}

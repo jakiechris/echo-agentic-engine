@@ -1,0 +1,26 @@
+INFO:     Started server process [11972]
+INFO:     Waiting for application startup.
+2026-03-18 23:01:35,356 - src.main - INFO - Echo Agentic Engine starting...
+2026-03-18 23:01:35,356 - src.main - INFO - Loading configuration from file...
+2026-03-18 23:01:35,366 - src.main - INFO - Configuration file loaded: config.json
+2026-03-18 23:01:35,366 - src.main - INFO - Connecting to Redis at 106.55.167.184:6379...
+2026-03-18 23:01:35,767 - src.main - INFO - Redis connected successfully
+2026-03-18 23:01:35,786 - src.main - INFO - Configuration loaded: enginePort=8000, maxSandboxes=50, nasRootPath=./testworkspace
+2026-03-18 23:01:36,356 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: HealthCheckTask (interval: 30s)
+2026-03-18 23:01:36,356 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: IdleCleanupTask (interval: 60s)
+2026-03-18 23:01:36,356 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: ConfigSyncTask (interval: 300s)
+2026-03-18 23:01:36,357 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: HealthCheckTask
+2026-03-18 23:01:36,358 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: IdleCleanupTask
+2026-03-18 23:01:36,362 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: ConfigSyncTask
+2026-03-18 23:01:36,362 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Scheduler started with 3 tasks
+2026-03-18 23:01:36,362 - src.main - INFO - Background tasks started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8008 (Press CTRL+C to quit)
+2026-03-18 23:02:34,184 - src.main - INFO - GET /health - 200 - 0.001s
+INFO:     127.0.0.1:52401 - "GET /health HTTP/1.1" 200 OK
+2026-03-18 23:02:34,739 - src.main - INFO - POST /admin/sandbox/list - 200 - 0.009s
+INFO:     127.0.0.1:52402 - "POST /admin/sandbox/list HTTP/1.1" 200 OK
+2026-03-18 23:02:35,376 - src.main - INFO - POST /admin/sandbox/create - 500 - 0.110s
+INFO:     127.0.0.1:52403 - "POST /admin/sandbox/create HTTP/1.1" 500 Internal Server Error
+2026-03-18 23:02:35,951 - src.main - INFO - POST /admin/sandbox/get - 404 - 0.002s
+INFO:     127.0.0.1:52404 - "POST /admin/sandbox/get HTTP/1.1" 404 Not Found
