@@ -21,7 +21,8 @@ class ProxyRouter:
         path: str,
         request: Request,
         x_domain_id: str = None,
-        x_sandbox_id: str = None
+        x_sandbox_id: str = None,
+        x_project_name: str = None
     ) -> Response:
         """
         处理 OpenCode API 代理请求
@@ -33,6 +34,7 @@ class ProxyRouter:
             request: FastAPI Request 对象
             x_domain_id: 租户标识 (从 X-Domain-ID Header 提取)
             x_sandbox_id: 沙箱标识 (从 X-Sandbox-ID Header 提取)
+            x_project_name: 项目名称 (从 X-Project-Name Header 提取)
 
         Returns:
             Response: OpenCode 原生响应
@@ -47,12 +49,15 @@ class ProxyRouter:
                 x_domain_id = headers.get("X-Domain-ID") or headers.get("x-domain-id")
             if not x_sandbox_id:
                 x_sandbox_id = headers.get("X-Sandbox-ID") or headers.get("x-sandbox-id")
+            if not x_project_name:
+                x_project_name = headers.get("X-Project-Name") or headers.get("x-project-name")
 
             # 验证参数
             try:
-                domainID, sandboxID = container.request_validator.validateProxyRequest({
+                domainID, sandboxID, projectName = container.request_validator.validateProxyRequest({
                     "X-Domain-ID": x_domain_id,
-                    "X-Sandbox-ID": x_sandbox_id
+                    "X-Sandbox-ID": x_sandbox_id,
+                    "X-Project-Name": x_project_name
                 })
             except ValidationError as e:
                 return container.response_builder.handleException(e)
@@ -60,7 +65,7 @@ class ProxyRouter:
             # ========== 2. 获取或创建沙箱 ==========
             # 沙箱不存在则自动创建，不健康则自动重建
             try:
-                sandbox = container.sandbox_manager.getOrCreateSandbox(domainID, sandboxID)
+                sandbox = container.sandbox_manager.getOrCreateSandbox(domainID, sandboxID, projectName)
             except Exception as e:
                 return container.response_builder.handleException(e)
 
@@ -79,7 +84,7 @@ class ProxyRouter:
 
             # 代理请求到沙箱
             try:
-                proxy_response = container.request_proxy.proxyRequest(
+                proxy_response = await container.request_proxy.proxyRequest(
                     sandbox=sandbox,
                     method=method,
                     path=request_path,

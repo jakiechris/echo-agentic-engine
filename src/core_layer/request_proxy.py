@@ -28,7 +28,7 @@ class RequestProxy:
         """配置请求超时"""
         self._timeout = timeout
 
-    def proxyRequest(
+    async def proxyRequest(
         self,
         sandbox: Sandbox,
         method: str,
@@ -38,6 +38,7 @@ class RequestProxy:
     ) -> Response:
         """
         将 HTTP 请求代理到沙箱内 OpenCode Serve，进行路径转换、Headers 转换、构建请求 URL
+        支持流式响应（SSE）和普通响应
 
         流程: 3.2.1 - OpenCode API 代理主流程
 
@@ -56,37 +57,65 @@ class RequestProxy:
             SandboxTimeoutError: 请求超时
         """
         from ..exceptions import SandboxUnavailableError, SandboxTimeoutError
+        from fastapi.responses import StreamingResponse
+        import json
 
         # 1. 构建请求 URL
         url = f"http://127.0.0.1:{sandbox.port}{path}"
 
         # 2. 转换 Headers
-        # 移除 X-Domain-ID, X-Sandbox-ID
+        # 移除 X-Domain-ID, X-Sandbox-ID, X-Project-Name
         proxy_headers = {
             k: v for k, v in headers.items()
-            if k.lower() not in ["x-domain-id", "x-sandbox-id"]
+            if k.lower() not in ["x-domain-id", "x-sandbox-id", "x-project-name", "host", "content-length"]
         }
 
         # 添加 Authorization (使用沙箱密码)
         proxy_headers["Authorization"] = f"Bearer {sandbox.password}"
 
-        # 3. 发送请求
+        # 3. 发送请求（支持流式）
         try:
-            with httpx.Client(timeout=self._timeout) as client:
-                response = client.request(
-                    method=method.upper(),
-                    url=url,
-                    headers=proxy_headers,
-                    json=body if body else None
-                )
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                # 判断是否为 SSE 流式请求
+                is_streaming = path.endswith("/event") or "text/event-stream" in headers.get("Accept", "")
 
-                # 4. 构建响应
-                return Response(
-                    content=response.content,
-                    status_code=response.status_code,
-                    media_type=response.headers.get("content-type", "application/json"),
-                    headers=dict(response.headers)
-                )
+                if is_streaming:
+                    # 流式请求：使用 stream
+                    async def stream_generator():
+                        async with client.stream(
+                            method=method.upper(),
+                            url=url,
+                            headers=proxy_headers,
+                            json=body if body else None
+                        ) as response:
+                            async for chunk in response.aiter_bytes():
+                                yield chunk
+
+                    return StreamingResponse(
+                        stream_generator(),
+                        media_type="text/event-stream",
+                        headers={
+                            "Cache-Control": "no-cache",
+                            "Connection": "keep-alive",
+                            "X-Accel-Buffering": "no"
+                        }
+                    )
+                else:
+                    # 普通请求
+                    response = await client.request(
+                        method=method.upper(),
+                        url=url,
+                        headers=proxy_headers,
+                        json=body if body else None
+                    )
+
+                    # 4. 构建响应
+                    return Response(
+                        content=response.content,
+                        status_code=response.status_code,
+                        media_type=response.headers.get("content-type", "application/json"),
+                        headers=dict(response.headers)
+                    )
 
         except httpx.TimeoutException:
             raise SandboxTimeoutError(

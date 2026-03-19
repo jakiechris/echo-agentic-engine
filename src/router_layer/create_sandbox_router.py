@@ -36,13 +36,13 @@ class CreateSandboxRouter:
 
         # 2. 验证参数
         try:
-            domainID, sandboxID = container.request_validator.validateAdminCreateRequest(body)
+            domainID, sandboxID, projectName = container.request_validator.validateAdminCreateRequest(body)
         except EngineError as e:
             return container.response_builder.handleException(e)
 
         # 3. 创建沙箱
         try:
-            sandbox = container.sandbox_manager.createSandbox(domainID, sandboxID)
+            sandbox = container.sandbox_manager.createSandbox(domainID, sandboxID, projectName)
         except EngineError as e:
             return container.response_builder.handleException(e)
         except Exception as e:
@@ -54,6 +54,7 @@ class CreateSandboxRouter:
         return container.response_builder.buildSuccessResponse({
             "domainID": sandbox.domainID,
             "sandboxID": sandbox.sandboxID,
+            "projectName": projectName,
             "pid": sandbox.pid,
             "port": sandbox.port,
             "nasPath": sandbox.nasPath,

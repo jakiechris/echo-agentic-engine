@@ -68,7 +68,7 @@ class SandboxManager:
         """
         return container.get_all_sandboxes_from_memory()
 
-    def createSandbox(self, domainID: str, sandboxID: str) -> Sandbox:
+    def createSandbox(self, domainID: str, sandboxID: str, projectName: str = "defaultProject") -> Sandbox:
         """
         协调各模块创建沙箱，包括分配端口、准备目录、启动进程、写入元数据
 
@@ -77,6 +77,7 @@ class SandboxManager:
         Args:
             domainID: 租户标识
             sandboxID: 沙箱标识
+            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             Sandbox: 新创建的沙箱实例对象
@@ -92,12 +93,15 @@ class SandboxManager:
         port = container.port_allocator.allocatePort()
 
         # 2. 准备 NAS 目录
-        nasPath = container.nas_manager.prepareDirectory(domainID, sandboxID)
+        nasPath = container.nas_manager.prepareDirectory(domainID, sandboxID, projectName)
 
         # 3. 启动 Bubblewrap 沙箱
-        pid, password = container.bubblewrap_launcher.launchSandbox(nasPath, port)
+        pid, password = container.bubblewrap_launcher.launchSandbox(domainID, sandboxID, nasPath, port, projectName)
 
         # 4. 构建沙箱实例
+        # 获取 engineHost
+        engineHost = container.config_manager._config.engineHost
+
         sandbox = Sandbox(
             domainID=domainID,
             sandboxID=sandboxID,
@@ -105,6 +109,7 @@ class SandboxManager:
             port=port,
             nasPath=nasPath,
             password=password,
+            engineHost=engineHost,
             status="running",
             createdAt=now,
             lastActiveAt=now
@@ -118,6 +123,7 @@ class SandboxManager:
             "port": port,
             "nasPath": nasPath,
             "password": password,
+            "engineHost": engineHost,
             "status": "running",
             "createdAt": now,
             "lastActiveAt": now
@@ -232,7 +238,7 @@ class SandboxManager:
                 results.append(False)
         return results
 
-    def getOrCreateSandbox(self, domainID: str, sandboxID: str) -> Sandbox:
+    def getOrCreateSandbox(self, domainID: str, sandboxID: str, projectName: str = "defaultProject") -> Sandbox:
         """
         获取或创建沙箱，若不存在则自动创建
 
@@ -241,6 +247,7 @@ class SandboxManager:
         Args:
             domainID: 租户标识
             sandboxID: 沙箱标识
+            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             Sandbox: 沙箱实例对象
@@ -248,6 +255,6 @@ class SandboxManager:
         sandbox = self.getSandbox(domainID, sandboxID)
 
         if sandbox is None:
-            sandbox = self.createSandbox(domainID, sandboxID)
+            sandbox = self.createSandbox(domainID, sandboxID, projectName)
 
         return sandbox

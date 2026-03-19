@@ -32,6 +32,7 @@ class Config:
     redisPassword: str = ""                    # Redis 密码 (可选)
     redisDB: int = 0                           # Redis 数据库编号
     nasRootPath: str = "/nas"                  # NAS 根路径
+    engineHost: str = "127.0.0.1"              # Engine 主机地址（对外）
     enginePort: int = 8000                     # Engine 监听端口
     openCodeCommand: str = "/usr/local/bin/opencode"  # OpenCode 命令路径
     logLevel: str = "INFO"                     # 日志级别

@@ -187,6 +187,7 @@ async def startup_event():
             config.nasRootPath = file_data["nas"].get("rootPath", "/nas")
 
         if "engine" in file_data:
+            config.engineHost = file_data["engine"].get("host", "127.0.0.1")
             config.enginePort = file_data["engine"].get("port", 8000)
             config.maxSandboxes = file_data["engine"].get("maxSandboxes", 50)
 

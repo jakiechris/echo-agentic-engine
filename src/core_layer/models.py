@@ -19,6 +19,7 @@ class Sandbox:
     port: int                              # 宿主机端口
     nasPath: str                           # NAS 目录路径
     password: str                          # OpenCode 访问密码
+    engineHost: str = "127.0.0.1"          # Engine 主机地址
     status: str = "running"                # 沙箱状态: running, destroying, error
     createdAt: str = ""                    # 创建时间 (ISO 8601)
     lastActiveAt: str = ""                 # 最后活跃时间 (ISO 8601)
@@ -39,6 +40,7 @@ class Sandbox:
             "port": self.port,
             "nasPath": self.nasPath,
             "password": self.password,
+            "engineHost": self.engineHost,
             "status": self.status,
             "createdAt": self.createdAt,
             "lastActiveAt": self.lastActiveAt
@@ -54,6 +56,7 @@ class Sandbox:
             port=data.get("port", 0),
             nasPath=data.get("nasPath", ""),
             password=data.get("password", ""),
+            engineHost=data.get("engineHost", "127.0.0.1"),
             status=data.get("status", "running"),
             createdAt=data.get("createdAt", ""),
             lastActiveAt=data.get("lastActiveAt", "")

@@ -1,26 +1,183 @@
-INFO:     Started server process [11972]
+/root/code/echo-agentic-engine/run.py:22: DeprecationWarning: Call to '__init__' function with deprecated usage of input argument/s 'retry_on_timeout'. (TimeoutError is included by default.) -- Deprecated since version 6.0.0.
+  if container.redis_client.connectRedis():
+INFO:     Started server process [28929]
 INFO:     Waiting for application startup.
-2026-03-18 23:01:35,356 - src.main - INFO - Echo Agentic Engine starting...
-2026-03-18 23:01:35,356 - src.main - INFO - Loading configuration from file...
-2026-03-18 23:01:35,366 - src.main - INFO - Configuration file loaded: config.json
-2026-03-18 23:01:35,366 - src.main - INFO - Connecting to Redis at 106.55.167.184:6379...
-2026-03-18 23:01:35,767 - src.main - INFO - Redis connected successfully
-2026-03-18 23:01:35,786 - src.main - INFO - Configuration loaded: enginePort=8000, maxSandboxes=50, nasRootPath=./testworkspace
-2026-03-18 23:01:36,356 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: HealthCheckTask (interval: 30s)
-2026-03-18 23:01:36,356 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: IdleCleanupTask (interval: 60s)
-2026-03-18 23:01:36,356 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: ConfigSyncTask (interval: 300s)
-2026-03-18 23:01:36,357 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: HealthCheckTask
-2026-03-18 23:01:36,358 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: IdleCleanupTask
-2026-03-18 23:01:36,362 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: ConfigSyncTask
-2026-03-18 23:01:36,362 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Scheduler started with 3 tasks
-2026-03-18 23:01:36,362 - src.main - INFO - Background tasks started
+2026-03-19 06:25:56,420 - src.main - INFO - Echo Agentic Engine starting...
+2026-03-19 06:25:56,420 - src.main - INFO - Loading configuration from file...
+2026-03-19 06:25:56,421 - src.main - INFO - Configuration file loaded: config.json
+2026-03-19 06:25:56,421 - src.main - INFO - Connecting to Redis at 106.55.167.184:6379...
+2026-03-19 06:25:56,429 - src.main - INFO - Redis connected successfully
+2026-03-19 06:25:56,430 - src.main - INFO - Configuration loaded: enginePort=8000, maxSandboxes=50, nasRootPath=/data/users
+2026-03-19 06:25:56,437 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: HealthCheckTask (interval: 30s)
+2026-03-19 06:25:56,437 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: IdleCleanupTask (interval: 60s)
+2026-03-19 06:25:56,437 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Registered task: ConfigSyncTask (interval: 300s)
+2026-03-19 06:25:56,438 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: HealthCheckTask
+2026-03-19 06:25:56,438 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: IdleCleanupTask
+2026-03-19 06:25:56,439 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Started task thread: ConfigSyncTask
+2026-03-19 06:25:56,439 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Scheduler started with 3 tasks
+2026-03-19 06:25:56,439 - src.main - INFO - Background tasks started
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8008 (Press CTRL+C to quit)
-2026-03-18 23:02:34,184 - src.main - INFO - GET /health - 200 - 0.001s
-INFO:     127.0.0.1:52401 - "GET /health HTTP/1.1" 200 OK
-2026-03-18 23:02:34,739 - src.main - INFO - POST /admin/sandbox/list - 200 - 0.009s
-INFO:     127.0.0.1:52402 - "POST /admin/sandbox/list HTTP/1.1" 200 OK
-2026-03-18 23:02:35,376 - src.main - INFO - POST /admin/sandbox/create - 500 - 0.110s
-INFO:     127.0.0.1:52403 - "POST /admin/sandbox/create HTTP/1.1" 500 Internal Server Error
-2026-03-18 23:02:35,951 - src.main - INFO - POST /admin/sandbox/get - 404 - 0.002s
-INFO:     127.0.0.1:52404 - "POST /admin/sandbox/get HTTP/1.1" 404 Not Found
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-03-19 06:26:38,818 - src.main - INFO - POST /admin/sandbox/list - 200 - 0.004s
+Initializing Echo Agentic Engine...
+Connecting to Redis...
+Warning: Redis connection failed, using in-memory mode
+Loading configuration...
+Configuration loaded:
+  - Port Range: 30001-40000
+  - Max Sandboxes: 50
+  - Idle Timeout: 3600s
+Engine initialized successfully
+Starting server on port 8000...
+INFO:     127.0.0.1:54398 - "POST /admin/sandbox/list HTTP/1.1" 200 OK
+2026-03-19 06:27:34,778 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 34309
+2026-03-19 06:27:37,038 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34309/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:27:37,040 - src.main - INFO - POST /admin/sandbox/create - 200 - 2.267s
+INFO:     127.0.0.1:49798 - "POST /admin/sandbox/create HTTP/1.1" 200 OK
+2026-03-19 06:27:37,119 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34309/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:27:37,123 - src.main - INFO - POST /admin/sandbox/list - 200 - 0.062s
+INFO:     127.0.0.1:49802 - "POST /admin/sandbox/list HTTP/1.1" 200 OK
+2026-03-19 06:27:37,190 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34309/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:27:37,192 - src.main - INFO - POST /admin/sandbox/get - 200 - 0.048s
+INFO:     127.0.0.1:49816 - "POST /admin/sandbox/get HTTP/1.1" 200 OK
+2026-03-19 06:27:56,440 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:27:56,474 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34309/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:27:56,475 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:27:56,475 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:28:07,484 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 34385
+2026-03-19 06:28:09,686 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34385/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:28:09,689 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:28:39,689 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:28:39,722 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:28:39,722 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:28:44,187 - src.main - INFO - POST /admin/sandbox/destroy - 200 - 11.015s
+INFO:     127.0.0.1:60488 - "POST /admin/sandbox/destroy HTTP/1.1" 200 OK
+2026-03-19 06:28:44,212 - src.main - INFO - POST /admin/sandbox/list - 200 - 0.001s
+INFO:     127.0.0.1:35144 - "POST /admin/sandbox/list HTTP/1.1" 200 OK
+2026-03-19 06:28:44,231 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 36732
+2026-03-19 06:28:46,407 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36732/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:28:46,409 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:29:16,409 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:29:16,441 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36732/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:29:16,441 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:29:16,441 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:29:27,450 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 35937
+2026-03-19 06:29:29,619 - httpx - INFO - HTTP Request: GET http://127.0.0.1:35937/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:29:29,622 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:29:59,622 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:29:59,653 - httpx - INFO - HTTP Request: GET http://127.0.0.1:35937/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:29:59,653 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:29:59,653 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:30:10,663 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 37292
+2026-03-19 06:30:12,818 - httpx - INFO - HTTP Request: GET http://127.0.0.1:37292/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:30:12,821 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:30:42,821 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:30:42,854 - httpx - INFO - HTTP Request: GET http://127.0.0.1:37292/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:30:42,854 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:30:42,854 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:30:53,864 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 34400
+2026-03-19 06:30:56,039 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34400/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:30:56,042 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:31:26,043 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:31:26,077 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34400/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:31:26,077 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:31:26,077 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:31:37,086 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 39892
+2026-03-19 06:31:39,241 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39892/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:31:39,244 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:32:09,245 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:32:09,276 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39892/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:32:09,276 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:32:09,276 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:32:20,285 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 30321
+2026-03-19 06:32:22,442 - httpx - INFO - HTTP Request: GET http://127.0.0.1:30321/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:32:22,444 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:32:52,446 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:32:52,478 - httpx - INFO - HTTP Request: GET http://127.0.0.1:30321/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:32:52,479 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:32:52,479 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:33:03,488 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 38607
+2026-03-19 06:33:05,664 - httpx - INFO - HTTP Request: GET http://127.0.0.1:38607/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:33:05,666 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:33:35,666 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:33:35,699 - httpx - INFO - HTTP Request: GET http://127.0.0.1:38607/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:33:35,700 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:33:35,700 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:33:46,710 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 35612
+2026-03-19 06:33:48,880 - httpx - INFO - HTTP Request: GET http://127.0.0.1:35612/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:33:48,882 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:34:18,883 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:34:18,953 - httpx - INFO - HTTP Request: GET http://127.0.0.1:35612/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:34:18,953 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:34:18,953 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:34:29,962 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 39257
+2026-03-19 06:34:32,110 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39257/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:34:32,112 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:35:02,112 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:35:02,144 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39257/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:35:02,144 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:35:02,144 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:35:13,153 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 36999
+2026-03-19 06:35:15,324 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36999/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:35:15,326 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:35:45,326 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:35:45,360 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36999/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:35:45,360 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:35:45,360 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:35:56,369 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 36090
+2026-03-19 06:35:58,535 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36090/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:35:58,538 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:36:28,539 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:36:28,571 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36090/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:36:28,572 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:36:28,572 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:36:39,581 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 34730
+2026-03-19 06:36:41,748 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34730/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:36:41,751 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:37:11,751 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:37:11,783 - httpx - INFO - HTTP Request: GET http://127.0.0.1:34730/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:37:11,783 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:37:11,783 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:37:22,792 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 39989
+2026-03-19 06:37:24,964 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39989/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:37:24,966 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:37:54,966 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:37:54,999 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39989/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:37:54,999 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:37:54,999 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:38:06,008 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 36882
+2026-03-19 06:38:08,191 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36882/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:38:08,193 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:38:38,193 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:38:38,231 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36882/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:38:38,232 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:38:38,232 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:38:49,241 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 30228
+2026-03-19 06:38:51,440 - httpx - INFO - HTTP Request: GET http://127.0.0.1:30228/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:38:51,444 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:39:21,445 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:39:21,480 - httpx - INFO - HTTP Request: GET http://127.0.0.1:30228/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:39:21,480 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:39:21,480 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:39:32,491 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 36385
+2026-03-19 06:39:34,666 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36385/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:39:34,668 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:40:04,668 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Checking health of 1 sandboxes
+2026-03-19 06:40:04,703 - httpx - INFO - HTTP Request: GET http://127.0.0.1:36385/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:40:04,704 - src.background_tasks.health_check_task - WARNING - [HealthCheckTask] Sandbox fake-domain/fake-sandbox is unhealthy: unknown
+2026-03-19 06:40:04,704 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Rebuilding 1 unhealthy sandboxes
+2026-03-19 06:40:15,718 - src.infrastructure_layer.bubblewrap_launcher - INFO - [Bubblewrap] Launching sandbox with command: bwrap --ro-bind /usr /usr --ro-bind /etc/resolv.conf /etc/resolv.conf --ro-bind /etc/ssl /etc/ssl --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --ro-bind /proc /proc --dev /dev --bind /data/users/fake-domain/fake-sandbox/data /data --bind /data/users/fake-domain/fake-sandbox/config /config --bind /data/users/fake-domain/fake-sandbox/workspace /workspace --bind /data/users/fake-domain/fake-sandbox/tmp /tmp --unshare-user --unshare-pid --die-with-parent --new-session --chdir /workspace --setenv PATH /usr/local/bin:/usr/bin:/bin --setenv HOME /tmp --setenv XDG_DATA_HOME /data --setenv XDG_CONFIG_HOME /config --setenv XDG_STATE_HOME /data/state --setenv XDG_CACHE_HOME /data/cache -- /usr/local/bin/opencode serve --hostname=127.0.0.1 --port 39303
+2026-03-19 06:40:17,946 - httpx - INFO - HTTP Request: GET http://127.0.0.1:39303/global/health "HTTP/1.1 200 OK"
+2026-03-19 06:40:17,948 - src.background_tasks.health_check_task - INFO - [HealthCheckTask] Health check completed: 1 rebuilt, 0 failed
+2026-03-19 06:40:36,961 - src.main - INFO - POST /admin/sandbox/destroy - 200 - 11.006s
+INFO:     127.0.0.1:51922 - "POST /admin/sandbox/destroy HTTP/1.1" 200 OK
+2026-03-19 06:42:37,682 - src.main - INFO - POST /admin/sandbox/list - 200 - 0.000s
+INFO:     127.0.0.1:35416 - "POST /admin/sandbox/list HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2026-03-19 07:08:08,075 - src.main - INFO - Echo Agentic Engine shutting down...
+2026-03-19 07:08:08,075 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Stopping scheduler...
+2026-03-19 07:08:08,076 - src.bootstrap_layer.task_scheduler - INFO - [TaskScheduler] Scheduler stopped
+2026-03-19 07:08:08,076 - src.main - INFO - Background tasks stopped
+INFO:     Application shutdown complete.
+INFO:     Finished server process [28929]

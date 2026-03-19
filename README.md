@@ -85,10 +85,10 @@ WS   /api/opencode/pty/{id}/connect  # WebSocket 终端
 ### 前置要求
 
 - Linux 3.8+ 内核（支持 user namespace）
-- Go 1.21+ 或 Rust 1.70+
+- Python 3.8+
 - Redis 5.0+
-- NAS 存储（CIFS/NFS/本地磁盘）
 - Bubblewrap
+- OpenCode CLI
 
 ### 安装依赖
 
@@ -101,14 +101,20 @@ sudo dnf install bubblewrap
 
 # Arch Linux
 sudo pacman -S bubblewrap
+
+# 安装 OpenCode CLI
+npm i -g opencode-ai@latest
+
+# 安装 Python 依赖
+pip3 install -r requirements.txt
 ```
 
 ### 配置 NAS
 
 ```bash
-# 挂载 NAS（示例）
-sudo mkdir -p /mnt/nas
-sudo mount -t nfs nas-server:/export/data /mnt/nas
+# 创建数据目录
+sudo mkdir -p /data/users
+sudo chmod 777 /data/users
 ```
 
 ### 配置 Redis
@@ -117,36 +123,61 @@ sudo mount -t nfs nas-server:/export/data /mnt/nas
 # 启动 Redis
 redis-server --port 6379
 
-# 配置白名单
+# 配置白名单（可选）
 redis-cli SADD whitelist:domainIDs "your-domain-id"
 ```
 
-### 编译运行
+### 运行服务
 
 ```bash
 # 克隆项目
 git clone https://github.com/your-org/echo-agentic-engine.git
 cd echo-agentic-engine
 
-# 编译
-go build -o echo-engine cmd/main.go
+# 配置 config.json
+# 修改 redis、nas 等配置项
 
 # 运行
-./echo-engine --config config.yaml
+python3 run.py
 ```
 
 ## 配置说明
 
-### 配置文件示例 (config.yaml)
+### 配置文件示例 (config.json)
 
-```yaml
-server:
-  host: 0.0.0.0
-  port: 8080
-
-redis:
-  address: localhost:6379
-  password: ""
+```json
+{
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "password": "",
+        "db": 0
+    },
+    "nas": {
+        "rootPath": "/data/users"
+    },
+    "engine": {
+        "port": 8000,
+        "maxSandboxes": 50,
+        "logLevel": "INFO"
+    },
+    "sandbox": {
+        "portRange": {
+            "min": 30001,
+            "max": 40000
+        },
+        "idleTimeout": 3600,
+        "openCodeCommand": "/usr/local/bin/opencode"
+    },
+    "tasks": {
+        "healthCheckInterval": 30,
+        "idleCheckInterval": 60,
+        "configSyncInterval": 300,
+        "healthCheckTimeout": 5,
+        "maxRetries": 3
+    }
+}
+```
   db: 0
 
 nas:

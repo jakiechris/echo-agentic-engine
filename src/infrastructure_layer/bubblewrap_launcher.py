@@ -37,16 +37,19 @@ class BubblewrapLauncher:
         """配置 OpenCode 命令路径"""
         self._opencode_command = opencode_command
 
-    def launchSandbox(self, nasPath: str, port: int) -> Tuple[int, str]:
+    def launchSandbox(self, domainID: str, sandboxID: str, nasPath: str, port: int, projectName: str = "defaultProject") -> Tuple[int, str]:
         """
-        生成随机密码,构建 Bubblewrap 命令启动沙箱进程,等待进程就绪后返回进程 ID 和密码
+        构建正确的 Bubblewrap 命令启动沙箱进程,等待进程就绪后返回进程 ID 和密码
 
         流程: 3.2.1 - OpenCode API 代理主流程
         流程: 3.2.4 - 管理接口：创建沙箱
 
         Args:
-            nasPath: NAS 目录路径
+            domainID: 租户标识
+            sandboxID: 沙箱标识
+            nasPath: NAS 根目录路径
             port: 宿主机端口
+            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             Tuple[int, str]: (pid, password) 进程 ID 和 OpenCode 访问密码 (UUID)
@@ -57,27 +60,55 @@ class BubblewrapLauncher:
         # 生成随机密码 (UUID)
         password = str(uuid.uuid4())
 
+        # 构建用户数据目录路径
+        user_data_root = f"/data/users/{domainID}/{sandboxID}"
+        data_dir = f"{user_data_root}/data"
+        config_dir = f"{user_data_root}/config"
+        project_dir = f"{user_data_root}/projects/{projectName}"
+        tmp_dir = f"{user_data_root}/tmp"
+
         # 构建 Bubblewrap 命令
-        # 注意：实际实现需要根据 Bubblewrap 的具体配置调整
         command = [
             "bwrap",
+            "--ro-bind", "/usr", "/usr",
+            "--ro-bind", "/etc/resolv.conf", "/etc/resolv.conf",
+            "--ro-bind", "/etc/ssl", "/etc/ssl",
+            "--ro-bind", "/lib", "/lib",
+            "--ro-bind", "/lib64", "/lib64",
+            "--ro-bind", "/bin", "/bin",
+            "--ro-bind", "/sbin", "/sbin",
+            "--ro-bind", "/proc", "/proc",
+            "--dev", "/dev",
+            "--bind", data_dir, "/data",
+            "--bind", config_dir, "/config",
+            "--bind", project_dir, "/workspace",
+            "--bind", tmp_dir, "/tmp",
+            "--unshare-user",
             "--unshare-pid",
-            "--unshare-net",
-            "--bind", nasPath, "/workspace",
-            "--dev-bind", "/dev", "/dev",
-            "--proc", "/proc",
-            "--tmpfs", "/tmp",
             "--die-with-parent",
             "--new-session",
+            "--chdir", "/workspace",
+            "--setenv", "PATH", "/usr/local/bin:/usr/bin:/bin",
+            "--setenv", "HOME", "/tmp",
+            "--setenv", "XDG_DATA_HOME", "/data",
+            "--setenv", "XDG_CONFIG_HOME", "/config",
+            "--setenv", "XDG_STATE_HOME", "/data/state",
+            "--setenv", "XDG_CACHE_HOME", "/data/cache",
+            "--",
             self._opencode_command,
             "serve",
-            "--port", str(port),  # OpenCode 监听端口
-            "--password", password,
+            "--hostname=127.0.0.1",
+            "--port", str(port)
         ]
 
         # 设置环境变量
         env = os.environ.copy()
         env["SANDBOX_PORT"] = str(port)
+
+        # 打印 bwrap 命令到日志
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[Bubblewrap] Launching sandbox with command: {' '.join(command)}")
 
         try:
             # 启动进程
