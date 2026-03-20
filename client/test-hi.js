@@ -5,20 +5,20 @@
 
 import { Agent, setGlobalDispatcher } from 'undici';
 
-// 设置全局Agent，配置5小时超时（测试用）
+// 设置全局Agent，配置长超时
 setGlobalDispatcher(new Agent({
-    headersTimeout: 18000000,      // 5小时 = 5 * 60 * 60 * 1000
-    bodyTimeout: 18000000,         // 5小时
-    keepAliveTimeout: 18000000,    // 5小时
-    keepAliveMaxTimeout: 18000000, // 5小时
+    headersTimeout: 600000,      // 10分钟 - 等待响应头
+    bodyTimeout: 600000,          // 10分钟 - 等待响应体
+    keepAliveTimeout: 600000,     // 10分钟 - keep-alive超时
+    keepAliveMaxTimeout: 600000,
 }));
 
 async function test() {
     console.log('=== 测试发送Prompt并接收流式响应 ===\n');
 
     const ENGINE_HOST = 'http://localhost:8000';
-    const DOMAIN_ID = 'new-test';
-    const SANDBOX_ID = 'new-sandbox';
+    const DOMAIN_ID = 'test';
+    const SANDBOX_ID = 'test';
 
     // 1. 订阅事件流
     console.log('1. 订阅事件流...');
@@ -77,7 +77,7 @@ async function test() {
 
     // 3. 发送prompt
     console.log('3. 发送prompt...');
-    const promptText = "帮我把cowork分类.xlsx理解一遍，总结信息，丰富内容，并重新写个更好的excel文件。注意执行python脚本时使用python3 xx.py，并注意尽量使用skill";
+    const promptText = "列出有哪些文件";
     console.log(`Prompt: "${promptText}"\n`);
 
     const promptResponse = await fetch(`${ENGINE_HOST}/trans/session/${sessionId}/message`, {

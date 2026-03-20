@@ -31,7 +31,7 @@ class GetSandboxRouter:
 
         Args:
             request: FastAPI Request 对象
-                     Body: {"idleMinutes": 5}  # 清理空闲超过5分钟的沙箱
+                     Body: {"idleSeconds": 300}  # 清理空闲超过300秒（5分钟）的沙箱
 
         Returns:
             JSONResponse: 包含清理结果的响应
@@ -43,12 +43,12 @@ class GetSandboxRouter:
             except:
                 body = {}
 
-            idle_minutes = body.get("idleMinutes", 5)
+            idle_seconds = body.get("idleSeconds", 300)  # 默认300秒（5分钟）
 
-            if not isinstance(idle_minutes, (int, float)) or idle_minutes <= 0:
-                idle_minutes = 5
+            if not isinstance(idle_seconds, (int, float)) or idle_seconds <= 0:
+                idle_seconds = 300
 
-            logger.info(f"[CleanupSandbox] Cleaning up sandboxes idle for {idle_minutes} minutes")
+            logger.info(f"[CleanupSandbox] Cleaning up sandboxes idle for {idle_seconds} seconds")
 
             # 2. 获取当前引擎URL
             import socket
@@ -68,7 +68,7 @@ class GetSandboxRouter:
             sandboxes = container.sandbox_manager.listAllSandboxes()
 
             # 4. 找出空闲超过指定时长的沙箱
-            cutoff_time = datetime.utcnow() - timedelta(minutes=idle_minutes)
+            cutoff_time = datetime.utcnow() - timedelta(seconds=idle_seconds)
             cutoff_str = cutoff_time.isoformat() + "Z"
 
             to_destroy = []
@@ -112,7 +112,7 @@ class GetSandboxRouter:
             response_data = {
                 "status": "success",
                 "data": {
-                    "idleMinutes": idle_minutes,
+                    "idleSeconds": idle_seconds,
                     "totalScanned": len(sandboxes),
                     "destroyed": destroyed_count,
                     "failed": failed_count
