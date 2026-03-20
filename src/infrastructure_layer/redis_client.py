@@ -1,9 +1,7 @@
 """
 RedisClient 模块
 
-职责: Redis 客户端,管理沙箱元数据和配置
-
-参与流程: 7 个流程 (3.2.1 - 3.2.6, 3.2.9)
+职责: Redis 客户端,管理引擎信息和沙箱信息的两张表
 """
 
 import json
@@ -32,8 +30,6 @@ class RedisClient:
         """
         建立 Redis 连接池,测试连接可用性
 
-        流程: 3.2.6 - Engine 启动主流程
-
         Returns:
             bool: 是否连接成功
         """
@@ -49,14 +45,14 @@ class RedisClient:
                 db=self._db,
                 decode_responses=True,
                 socket_connect_timeout=2,
-                socket_timeout=2,
-                retry_on_timeout=False
+                socket_timeout=2
             )
             # 测试连接
             self._client.ping()
             self._connected = True
             return True
-        except Exception:
+        except Exception as e:
+            print(f"Redis connection error: {e}")
             self._client = None
             self._connected = False
             return False
@@ -72,299 +68,324 @@ class RedisClient:
         """检查 Redis 是否已连接"""
         return self._connected and self._client is not None
 
-    def setSandboxMetadata(
+    # ==================== 引擎信息表操作 ====================
+
+    def setEngineInfo(
         self,
-        domainID: str,
-        sandboxID: str,
-        metadata: Dict
+        engine_url: str,
+        max_sandboxes: int,
+        used_sandboxes: int,
+        timestamp: str
     ) -> bool:
         """
-        写入沙箱元数据到 Redis Hash 结构
-
-        流程: 3.2.1 - OpenCode API 代理主流程
-        流程: 3.2.4 - 管理接口：创建沙箱
+        写入引擎信息到 Redis Hash
 
         Args:
-            domainID: 租户标识
-            sandboxID: 沙箱标识
-            metadata: 沙箱元数据字典
+            engine_url: 引擎完整URL (如 http://ip:8000/trans)
+            max_sandboxes: 支持的最大沙箱数量
+            used_sandboxes: 当前已使用的沙箱数量
+            timestamp: 当前时间戳
 
         Returns:
             bool: 是否写入成功
         """
         if not self.is_connected():
-            return True  # 未连接时返回成功，允许继续运行
+            return True
 
         try:
-            key = f"sandbox:{domainID}:{sandboxID}"
+            key = f"engine:{engine_url}"
 
-            # 序列化元数据
-            serialized_metadata = {}
-            for k, v in metadata.items():
-                if isinstance(v, (dict, list)):
-                    serialized_metadata[k] = json.dumps(v)
-                else:
-                    serialized_metadata[k] = str(v) if v is not None else ""
-
-            self._client.hset(key, mapping=serialized_metadata)
+            self._client.hset(key, mapping={
+                "engineUrl": engine_url,
+                "maxSandboxes": str(max_sandboxes),
+                "usedSandboxes": str(used_sandboxes),
+                "timestamp": timestamp
+            })
             return True
         except Exception:
             return False
 
-    def fetchSandboxMetadata(
-        self,
-        domainID: str,
-        sandboxID: str
-    ) -> Optional[Dict]:
+    def getEngineInfo(self, engine_url: str) -> Optional[Dict]:
         """
-        查询单个沙箱的元数据
-
-        流程: 3.2.3 - 管理接口：查询单个沙箱
+        查询引擎信息
 
         Args:
-            domainID: 租户标识
-            sandboxID: 沙箱标识
+            engine_url: 引擎完整URL
 
         Returns:
-            Dict | None: 沙箱元数据对象,不存在则返回 None
+            Dict | None: 引擎信息
         """
         if not self.is_connected():
             return None
 
         try:
-            key = f"sandbox:{domainID}:{sandboxID}"
+            key = f"engine:{engine_url}"
 
             if not self._client.exists(key):
                 return None
 
             data = self._client.hgetall(key)
 
-            # 反序列化
-            metadata = {}
-            for k, v in data.items():
-                try:
-                    metadata[k] = json.loads(v)
-                except (json.JSONDecodeError, TypeError):
-                    metadata[k] = v
-
-            return metadata
+            return {
+                "engineUrl": data.get("engineUrl"),
+                "maxSandboxes": int(data.get("maxSandboxes", 0)),
+                "usedSandboxes": int(data.get("usedSandboxes", 0)),
+                "timestamp": data.get("timestamp")
+            }
         except Exception:
             return None
 
-    def fetchBatchMetadata(
-        self,
-        sandboxIDs: List[str]
-    ) -> Dict[str, Dict]:
+    def getAllEngines(self) -> List[Dict]:
         """
-        批量查询多个沙箱的元数据
-
-        流程: 3.2.2 - 管理接口：列出所有沙箱
-
-        Args:
-            sandboxIDs: 沙箱标识列表 (格式: {domainID}:{sandboxID})
+        获取所有引擎信息
 
         Returns:
-            Dict[str, Dict]: 沙箱 ID 到元数据的映射字典
+            List[Dict]: 引擎信息列表
         """
-        result = {}
+        engines = []
         if not self.is_connected():
-            return result
+            return engines
 
         try:
-            # 使用 pipeline 批量查询
-            pipe = self._client.pipeline()
-            keys = [f"sandbox:{sid}" for sid in sandboxIDs]
-
-            for key in keys:
-                pipe.hgetall(key)
-
-            responses = pipe.execute()
-
-            for sid, data in zip(sandboxIDs, responses):
-                if data:
-                    # 反序列化
-                    metadata = {}
-                    for k, v in data.items():
-                        try:
-                            metadata[k] = json.loads(v)
-                        except (json.JSONDecodeError, TypeError):
-                            metadata[k] = v
-                    result[sid] = metadata
-        except Exception:
-            pass
-
-        return result
-
-    def updateMetadata(
-        self,
-        domainID: str,
-        sandboxID: str,
-        **kwargs
-    ) -> bool:
-        """
-        更新沙箱元数据的指定字段
-
-        流程: 3.2.1 - OpenCode API 代理主流程
-        流程: 3.2.5 - 管理接口：销毁沙箱
-
-        Args:
-            domainID: 租户标识
-            sandboxID: 沙箱标识
-            **kwargs: 需要更新的字段键值对
-
-        Returns:
-            bool: 是否更新成功
-        """
-        if not self.is_connected():
-            return True  # 未连接时返回成功
-
-        try:
-            key = f"sandbox:{domainID}:{sandboxID}"
-
-            if not kwargs:
-                return True
-
-            # 序列化字段
-            serialized = {}
-            for k, v in kwargs.items():
-                if isinstance(v, (dict, list)):
-                    serialized[k] = json.dumps(v)
-                else:
-                    serialized[k] = str(v) if v is not None else ""
-
-            self._client.hset(key, mapping=serialized)
-            return True
-        except Exception:
-            return False
-
-    def deleteSandboxMetadata(
-        self,
-        domainID: str,
-        sandboxID: str
-    ) -> bool:
-        """
-        删除沙箱元数据 Key
-
-        流程: 3.2.5 - 管理接口：销毁沙箱
-
-        Args:
-            domainID: 租户标识
-            sandboxID: 沙箱标识
-
-        Returns:
-            bool: 是否删除成功
-        """
-        if not self.is_connected():
-            return True  # 未连接时返回成功
-
-        try:
-            key = f"sandbox:{domainID}:{sandboxID}"
-            self._client.delete(key)
-            return True
-        except Exception:
-            return False
-
-    def updateLastActive(
-        self,
-        domainID: str,
-        sandboxID: str
-    ) -> bool:
-        """
-        更新沙箱的最后活跃时间为当前时间
-
-        流程: 3.2.1 - OpenCode API 代理主流程
-
-        Args:
-            domainID: 租户标识
-            sandboxID: 沙箱标识
-
-        Returns:
-            bool: 是否更新成功
-        """
-        now = datetime.utcnow().isoformat() + "Z"
-        return self.updateMetadata(domainID, sandboxID, lastActiveAt=now)
-
-    def queryAllocatedPorts(self) -> List[int]:
-        """
-        查询所有沙箱元数据,提取所有已分配的端口列表
-
-        流程: 3.2.1 - OpenCode API 代理主流程
-        流程: 3.2.4 - 管理接口：创建沙箱
-
-        Returns:
-            List[int]: 已分配端口号列表
-        """
-        ports = []
-        if not self.is_connected():
-            return ports
-
-        try:
-            # 扫描所有 sandbox:* 的 key
             cursor = 0
             while True:
-                cursor, keys = self._client.scan(cursor, match="sandbox:*", count=100)
+                cursor, keys = self._client.scan(cursor, match="engine:*", count=100)
                 for key in keys:
-                    port = self._client.hget(key, "port")
-                    if port:
-                        try:
-                            ports.append(int(port))
-                        except (ValueError, TypeError):
-                            pass
+                    data = self._client.hgetall(key)
+                    if data:
+                        engines.append({
+                            "engineUrl": data.get("engineUrl"),
+                            "maxSandboxes": int(data.get("maxSandboxes", 0)),
+                            "usedSandboxes": int(data.get("usedSandboxes", 0)),
+                            "timestamp": data.get("timestamp")
+                        })
                 if cursor == 0:
                     break
         except Exception:
             pass
 
-        return ports
+        return engines
 
-    def getConfig(self, key: str = "engine:config") -> Dict:
+    def deleteEngineInfo(self, engine_url: str) -> bool:
         """
-        查询 Engine 全局配置
-
-        流程: 3.2.6 - Engine 启动主流程
-        流程: 3.2.9 - ConfigSyncTask 调用链
+        删除引擎信息
 
         Args:
-            key: 配置键名，默认 "engine:config"
+            engine_url: 引擎完整URL
 
         Returns:
-            Dict: 配置字典
-        """
-        return self.fetchConfig()
-
-    def fetchConfig(self) -> Dict:
-        """
-        查询 Engine 全局配置
-
-        流程: 3.2.6 - Engine 启动主流程
-        流程: 3.2.9 - ConfigSyncTask 调用链
-
-        Returns:
-            Dict: 配置字典
+            bool: 是否删除成功
         """
         if not self.is_connected():
-            return {}
+            return True
 
         try:
-            key = "engine:config"
+            key = f"engine:{engine_url}"
+            self._client.delete(key)
+            return True
+        except Exception:
+            return False
+
+    # ==================== 沙箱信息表操作 ====================
+
+    def setSandboxInfo(
+        self,
+        domain_id: str,
+        sandbox_id: str,
+        engine_url: str,
+        timestamp: str,
+        last_request_time: str
+    ) -> bool:
+        """
+        写入沙箱信息到 Redis Hash
+
+        Args:
+            domain_id: 租户标识
+            sandbox_id: 沙箱标识
+            engine_url: 所属引擎完整URL
+            timestamp: 当前时间戳
+            last_request_time: 最近一次请求处理完成时间
+
+        Returns:
+            bool: 是否写入成功
+        """
+        if not self.is_connected():
+            return True
+
+        try:
+            key = f"sandbox:{domain_id}:{sandbox_id}"
+
+            self._client.hset(key, mapping={
+                "domainID": domain_id,
+                "sandboxID": sandbox_id,
+                "engineUrl": engine_url,
+                "timestamp": timestamp,
+                "lastRequestTime": last_request_time
+            })
+            return True
+        except Exception:
+            return False
+
+    def getSandboxInfo(self, domain_id: str, sandbox_id: str) -> Optional[Dict]:
+        """
+        查询单个沙箱信息
+
+        Args:
+            domain_id: 租户标识
+            sandbox_id: 沙箱标识
+
+        Returns:
+            Dict | None: 沙箱信息
+        """
+        if not self.is_connected():
+            return None
+
+        try:
+            key = f"sandbox:{domain_id}:{sandbox_id}"
 
             if not self._client.exists(key):
-                return {}
+                return None
 
             data = self._client.hgetall(key)
 
-            # 反序列化
-            config = {}
-            for k, v in data.items():
-                try:
-                    config[k] = json.loads(v)
-                except (json.JSONDecodeError, TypeError):
-                    # 尝试解析为数字
-                    try:
-                        config[k] = int(v)
-                    except (ValueError, TypeError):
-                        config[k] = v
-
-            return config
+            return {
+                "domainID": data.get("domainID"),
+                "sandboxID": data.get("sandboxID"),
+                "engineUrl": data.get("engineUrl"),
+                "timestamp": data.get("timestamp"),
+                "lastRequestTime": data.get("lastRequestTime")
+            }
         except Exception:
-            return {}
+            return None
+
+    def getSandboxesByEngine(self, engine_url: str) -> List[Dict]:
+        """
+        查询指定引擎的所有沙箱
+
+        Args:
+            engine_url: 引擎完整URL
+
+        Returns:
+            List[Dict]: 沙箱信息列表
+        """
+        sandboxes = []
+        if not self.is_connected():
+            return sandboxes
+
+        try:
+            cursor = 0
+            while True:
+                cursor, keys = self._client.scan(cursor, match="sandbox:*", count=100)
+                for key in keys:
+                    data = self._client.hgetall(key)
+                    if data and data.get("engineUrl") == engine_url:
+                        sandboxes.append({
+                            "domainID": data.get("domainID"),
+                            "sandboxID": data.get("sandboxID"),
+                            "engineUrl": data.get("engineUrl"),
+                            "timestamp": data.get("timestamp"),
+                            "lastRequestTime": data.get("lastRequestTime")
+                        })
+                if cursor == 0:
+                    break
+        except Exception:
+            pass
+
+        return sandboxes
+
+    def getAllSandboxes(self) -> List[Dict]:
+        """
+        获取所有沙箱信息
+
+        Returns:
+            List[Dict]: 沙箱信息列表
+        """
+        sandboxes = []
+        if not self.is_connected():
+            return sandboxes
+
+        try:
+            cursor = 0
+            while True:
+                cursor, keys = self._client.scan(cursor, match="sandbox:*", count=100)
+                for key in keys:
+                    data = self._client.hgetall(key)
+                    if data:
+                        sandboxes.append({
+                            "domainID": data.get("domainID"),
+                            "sandboxID": data.get("sandboxID"),
+                            "engineUrl": data.get("engineUrl"),
+                            "timestamp": data.get("timestamp"),
+                            "lastRequestTime": data.get("lastRequestTime")
+                        })
+                if cursor == 0:
+                    break
+        except Exception:
+            pass
+
+        return sandboxes
+
+    def deleteSandboxInfo(self, domain_id: str, sandbox_id: str) -> bool:
+        """
+        删除沙箱信息
+
+        Args:
+            domain_id: 租户标识
+            sandbox_id: 沙箱标识
+
+        Returns:
+            bool: 是否删除成功
+        """
+        if not self.is_connected():
+            return True
+
+        try:
+            key = f"sandbox:{domain_id}:{sandbox_id}"
+            self._client.delete(key)
+            return True
+        except Exception:
+            return False
+
+    def updateSandboxLastRequest(
+        self,
+        domain_id: str,
+        sandbox_id: str,
+        last_request_time: str
+    ) -> bool:
+        """
+        更新沙箱的最后请求时间
+
+        Args:
+            domain_id: 租户标识
+            sandbox_id: 沙箱标识
+            last_request_time: 最近一次请求处理完成时间
+
+        Returns:
+            bool: 是否更新成功
+        """
+        if not self.is_connected():
+            return True
+
+        try:
+            key = f"sandbox:{domain_id}:{sandbox_id}"
+            timestamp = datetime.utcnow().isoformat() + "Z"
+
+            self._client.hset(key, mapping={
+                "timestamp": timestamp,
+                "lastRequestTime": last_request_time
+            })
+            return True
+        except Exception:
+            return False
+
+    # ==================== 兼容旧接口 ====================
+
+    def queryAllocatedPorts(self) -> List[int]:
+        """
+        查询所有沙箱元数据,提取所有已分配的端口列表 (兼容旧接口)
+
+        Returns:
+            List[int]: 已分配端口号列表
+        """
+        # 从内存中的沙箱管理器获取，不从Redis获取
+        return []

@@ -5,3 +5,7 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+
+# Log files
+log/
+*.log

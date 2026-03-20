@@ -21,8 +21,7 @@ class ProxyRouter:
         path: str,
         request: Request,
         x_domain_id: str = None,
-        x_sandbox_id: str = None,
-        x_project_name: str = None
+        x_sandbox_id: str = None
     ) -> Response:
         """
         处理 OpenCode API 代理请求
@@ -34,7 +33,6 @@ class ProxyRouter:
             request: FastAPI Request 对象
             x_domain_id: 租户标识 (从 X-Domain-ID Header 提取)
             x_sandbox_id: 沙箱标识 (从 X-Sandbox-ID Header 提取)
-            x_project_name: 项目名称 (从 X-Project-Name Header 提取)
 
         Returns:
             Response: OpenCode 原生响应
@@ -49,15 +47,12 @@ class ProxyRouter:
                 x_domain_id = headers.get("X-Domain-ID") or headers.get("x-domain-id")
             if not x_sandbox_id:
                 x_sandbox_id = headers.get("X-Sandbox-ID") or headers.get("x-sandbox-id")
-            if not x_project_name:
-                x_project_name = headers.get("X-Project-Name") or headers.get("x-project-name")
 
             # 验证参数
             try:
-                domainID, sandboxID, projectName = container.request_validator.validateProxyRequest({
+                domainID, sandboxID = container.request_validator.validateProxyRequest({
                     "X-Domain-ID": x_domain_id,
-                    "X-Sandbox-ID": x_sandbox_id,
-                    "X-Project-Name": x_project_name
+                    "X-Sandbox-ID": x_sandbox_id
                 })
             except ValidationError as e:
                 return container.response_builder.handleException(e)
@@ -65,7 +60,7 @@ class ProxyRouter:
             # ========== 2. 获取或创建沙箱 ==========
             # 沙箱不存在则自动创建，不健康则自动重建
             try:
-                sandbox = container.sandbox_manager.getOrCreateSandbox(domainID, sandboxID, projectName)
+                sandbox = container.sandbox_manager.getOrCreateSandbox(domainID, sandboxID)
             except Exception as e:
                 return container.response_builder.handleException(e)
 
@@ -93,11 +88,13 @@ class ProxyRouter:
                 )
 
                 # ========== 4. 更新活跃时间 ==========
-                container.redis_client.updateLastActive(domainID, sandboxID)
+                from datetime import datetime
+                timestamp = datetime.utcnow().isoformat() + "Z"
+
+                container.redis_client.updateSandboxLastRequest(domainID, sandboxID, timestamp)
 
                 # 更新内存中的沙箱活跃时间
-                from datetime import datetime
-                sandbox.lastActiveAt = datetime.utcnow().isoformat() + "Z"
+                sandbox.lastActiveAt = timestamp
 
                 # ========== 5. 返回响应 ==========
                 return proxy_response

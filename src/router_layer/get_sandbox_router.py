@@ -1,83 +1,134 @@
 """
-GetSandboxRouter 模块
+CleanupSandboxRouter 模块
 
-职责: 处理查询单个沙箱的管理接口请求
+职责: 管理接口 - 清理空闲超过指定时长的沙箱
 
-HTTP接口: POST /admin/sandbox/get
-参与流程: 3.2.3 - 管理接口：查询单个沙箱
+流程: 3.2.3 - 管理接口：清理空闲沙箱
 """
 
-from datetime import datetime
-from fastapi import Request, Response
+import logging
+from datetime import datetime, timedelta
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 from ..container import container
-from ..exceptions import SandboxNotFoundError, EngineError
+from ..api_layer.response_builder import ResponseBuilder
+
+logger = logging.getLogger(__name__)
 
 
 class GetSandboxRouter:
-    """处理查询单个沙箱的路由模块"""
+    """处理清理空闲沙箱的路由模块"""
 
-    async def handleGetSandbox(self, request: Request) -> Response:
+    def __init__(self):
+        self._response_builder: ResponseBuilder = container.response_builder
+
+    async def handleGetSandbox(self, request: Request) -> JSONResponse:
         """
-        查询单个沙箱
+        清理空闲超过指定时长的沙箱
 
-        流程: 3.2.3 - 管理接口：查询单个沙箱
+        流程: 3.2.3 - 管理接口：清理空闲沙箱
 
         Args:
-            request: FastAPI Request 对象,Body 包含 domainID 和 sandboxID
+            request: FastAPI Request 对象
+                     Body: {"idleMinutes": 5}  # 清理空闲超过5分钟的沙箱
 
         Returns:
-            Response: 包含沙箱详情的响应
+            JSONResponse: 包含清理结果的响应
         """
-        # 1. 解析请求体
         try:
-            body = await request.json()
-        except:
-            body = {}
+            # 1. 解析请求参数
+            try:
+                body = await request.json()
+            except:
+                body = {}
 
-        # 2. 验证参数
-        try:
-            domainID, sandboxID = container.request_validator.validateAdminGetRequest(body)
-        except EngineError as e:
-            return container.response_builder.handleException(e)
+            idle_minutes = body.get("idleMinutes", 5)
 
-        # 3. 获取沙箱
-        sandbox = container.get_sandbox_from_memory(domainID, sandboxID)
+            if not isinstance(idle_minutes, (int, float)) or idle_minutes <= 0:
+                idle_minutes = 5
 
-        if sandbox is None:
-            return container.response_builder.handleException(
-                SandboxNotFoundError(domainID, sandboxID)
+            logger.info(f"[CleanupSandbox] Cleaning up sandboxes idle for {idle_minutes} minutes")
+
+            # 2. 获取当前引擎URL
+            import socket
+            config = container.config_manager.loadConfig()
+
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                ip = s.getsockname()[0]
+                s.close()
+            except Exception:
+                ip = config.engineHost
+
+            engine_url = f"http://{ip}:{config.enginePort}/trans"
+
+            # 3. 获取本引擎的所有沙箱
+            sandboxes = container.sandbox_manager.listAllSandboxes()
+
+            # 4. 找出空闲超过指定时长的沙箱
+            cutoff_time = datetime.utcnow() - timedelta(minutes=idle_minutes)
+            cutoff_str = cutoff_time.isoformat() + "Z"
+
+            to_destroy = []
+            for sandbox in sandboxes:
+                try:
+                    last_active_str = sandbox.lastActiveAt
+                    if last_active_str.endswith('Z'):
+                        last_active_str = last_active_str[:-1] + "+00:00"
+                    last_active = datetime.fromisoformat(last_active_str)
+
+                    if last_active < cutoff_time:
+                        to_destroy.append(sandbox)
+                        logger.info(
+                            f"[CleanupSandbox] Sandbox {sandbox.domainID}/{sandbox.sandboxID} "
+                            f"idle since {sandbox.lastActiveAt}, marking for cleanup"
+                        )
+                except Exception as e:
+                    logger.error(f"[CleanupSandbox] Error parsing time for sandbox: {e}")
+
+            # 5. 销毁空闲沙箱
+            destroyed_count = 0
+            failed_count = 0
+
+            for sandbox in to_destroy:
+                try:
+                    container.sandbox_manager.destroySandbox(sandbox.domainID, sandbox.sandboxID)
+                    # 从Redis删除沙箱信息
+                    container.redis_client.deleteSandboxInfo(sandbox.domainID, sandbox.sandboxID)
+                    destroyed_count += 1
+                    logger.info(
+                        f"[CleanupSandbox] Destroyed sandbox {sandbox.domainID}/{sandbox.sandboxID}"
+                    )
+                except Exception as e:
+                    failed_count += 1
+                    logger.error(
+                        f"[CleanupSandbox] Failed to destroy sandbox "
+                        f"{sandbox.domainID}/{sandbox.sandboxID}: {e}"
+                    )
+
+            # 6. 返回响应
+            response_data = {
+                "status": "success",
+                "data": {
+                    "idleMinutes": idle_minutes,
+                    "totalScanned": len(sandboxes),
+                    "destroyed": destroyed_count,
+                    "failed": failed_count
+                }
+            }
+
+            logger.info(
+                f"[CleanupSandbox] Cleanup completed: "
+                f"{destroyed_count} destroyed, {failed_count} failed"
             )
 
-        # 4. 健康检查
-        health_status = container.health_checker.checkHealth(sandbox)
+            return JSONResponse(
+                status_code=200,
+                content=response_data
+            )
 
-        # 5. 获取资源占用
-        resource_usage = container.resource_monitor.queryResourceUsage(sandbox.pid)
-
-        # 6. 读取日志
-        logs = container.log_reader.readLogs(sandbox.nasPath, limit=50)
-
-        # 7. 计算空闲时间
-        try:
-            last_active = datetime.fromisoformat(sandbox.lastActiveAt.replace("Z", "+00:00"))
-            idle_seconds = int((datetime.now(last_active.tzinfo) - last_active).total_seconds())
-        except:
-            idle_seconds = 0
-
-        # 8. 构建响应
-        return container.response_builder.buildSuccessResponse({
-            "domainID": sandbox.domainID,
-            "sandboxID": sandbox.sandboxID,
-            "status": sandbox.status,
-            "pid": sandbox.pid,
-            "port": sandbox.port,
-            "nasPath": sandbox.nasPath,
-            "password": sandbox.password,
-            "createdAt": sandbox.createdAt,
-            "lastActiveAt": sandbox.lastActiveAt,
-            "idleSeconds": idle_seconds,
-            "healthStatus": health_status,
-            "memoryUsage": resource_usage.get("memory") if resource_usage else None,
-            "logs": logs
-        })
+        except Exception as e:
+            logger.error(f"[CleanupSandbox] Error: {e}")
+            return self._response_builder.handleException(e)

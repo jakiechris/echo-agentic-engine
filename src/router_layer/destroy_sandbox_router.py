@@ -4,7 +4,7 @@ DestroySandboxRouter 模块
 职责: 处理销毁沙箱的管理接口请求
 
 HTTP接口: POST /admin/sandbox/destroy
-参与流程: 3.2.5 - 管理接口：销毁沙箱
+流程: 3.2.5 - 管理接口：销毁沙箱
 """
 
 from datetime import datetime
@@ -57,7 +57,14 @@ class DestroySandboxRouter:
         except EngineError as e:
             return container.response_builder.handleException(e)
 
-        # 5. 构建响应
+        # 5. 从Redis删除沙箱信息
+        try:
+            container.redis_client.deleteSandboxInfo(domainID, sandboxID)
+        except Exception:
+            # Redis删除失败不影响销毁
+            pass
+
+        # 6. 构建响应
         return container.response_builder.buildSuccessResponse({
             "domainID": domainID,
             "sandboxID": sandboxID,

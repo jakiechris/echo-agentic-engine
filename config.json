@@ -9,9 +9,9 @@
         "rootPath": "/data/users"
     },
     "engine": {
-        "host": "127.0.0.1",
+        "host": "0.0.0.0",
         "port": 8000,
-        "maxSandboxes": 50,
+        "maxSandboxes": 100,
         "logLevel": "INFO"
     },
     "sandbox": {
@@ -19,13 +19,11 @@
             "min": 30001,
             "max": 40000
         },
-        "idleTimeout": 3600,
+        "idleTimeout": 7200,
         "openCodeCommand": "/usr/local/bin/opencode"
     },
     "tasks": {
-        "healthCheckInterval": 30,
-        "idleCheckInterval": 60,
-        "configSyncInterval": 300,
+        "configSyncInterval": 5,
         "healthCheckTimeout": 5,
         "maxRetries": 3
     }

@@ -14,9 +14,9 @@ from ..exceptions import ValidationError
 class RequestValidator:
     """请求参数验证与提取"""
 
-    def validateProxyRequest(self, headers: Dict[str, str]) -> Tuple[str, str, str]:
+    def validateProxyRequest(self, headers: Dict[str, str]) -> Tuple[str, str]:
         """
-        验证 OpenCode API 代理请求，从 HTTP Headers 中提取租户标识、沙箱标识和项目名称
+        验证 OpenCode API 代理请求，从 HTTP Headers 中提取租户标识和沙箱标识
 
         流程: 3.2.1 - OpenCode API 代理主流程
 
@@ -24,7 +24,7 @@ class RequestValidator:
             headers: HTTP 请求头字典
 
         Returns:
-            Tuple[str, str, str]: (domainID, sandboxID, projectName)
+            Tuple[str, str]: (domainID, sandboxID)
 
         Raises:
             ValidationError: 验证失败时抛出，错误码 MISSING_DOMAIN_ID 或 MISSING_SANDBOX_ID
@@ -47,10 +47,7 @@ class RequestValidator:
                 details={"header": "X-Sandbox-ID"}
             )
 
-        # 提取 X-Project-Name (可选，默认为 defaultProject)
-        projectName = headers.get("X-Project-Name") or headers.get("x-project-name") or "defaultProject"
-
-        return (domainID, sandboxID, projectName)
+        return (domainID, sandboxID)
 
     def validateAdminListRequest(self, body: Dict) -> Dict:
         """
@@ -108,9 +105,9 @@ class RequestValidator:
 
         return (domainID, sandboxID)
 
-    def validateAdminCreateRequest(self, body: Dict) -> Tuple[str, str, str]:
+    def validateAdminCreateRequest(self, body: Dict) -> Tuple[str, str]:
         """
-        验证创建沙箱的管理接口请求，从请求体中提取租户标识、沙箱标识和项目名称
+        验证创建沙箱的管理接口请求，从请求体中提取租户标识和沙箱标识
 
         流程: 3.2.4 - 管理接口：创建沙箱
 
@@ -118,7 +115,7 @@ class RequestValidator:
             body: HTTP 请求体，包含 domainID 和 sandboxID
 
         Returns:
-            Tuple[str, str, str]: (domainID, sandboxID, projectName)
+            Tuple[str, str]: (domainID, sandboxID)
 
         Raises:
             ValidationError: 参数缺失时抛出，错误码 MISSING_DOMAIN_ID 或 MISSING_SANDBOX_ID
@@ -139,10 +136,7 @@ class RequestValidator:
                 details={"field": "sandboxID"}
             )
 
-        # 项目名称可选，默认为 defaultProject
-        projectName = body.get("projectName") or "defaultProject"
-
-        return (domainID, sandboxID, projectName)
+        return (domainID, sandboxID)
 
     def validateAdminDestroyRequest(self, body: Dict) -> Tuple[str, str]:
         """

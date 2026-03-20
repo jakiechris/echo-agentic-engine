@@ -6,6 +6,7 @@ SandboxManager 模块
 参与流程: 7 个流程 (3.2.1 - 3.2.5, 3.2.7, 3.2.8)
 """
 
+import socket
 from datetime import datetime
 from typing import List, Optional
 
@@ -68,7 +69,7 @@ class SandboxManager:
         """
         return container.get_all_sandboxes_from_memory()
 
-    def createSandbox(self, domainID: str, sandboxID: str, projectName: str = "defaultProject") -> Sandbox:
+    def createSandbox(self, domainID: str, sandboxID: str) -> Sandbox:
         """
         协调各模块创建沙箱，包括分配端口、准备目录、启动进程、写入元数据
 
@@ -77,7 +78,6 @@ class SandboxManager:
         Args:
             domainID: 租户标识
             sandboxID: 沙箱标识
-            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             Sandbox: 新创建的沙箱实例对象
@@ -93,10 +93,10 @@ class SandboxManager:
         port = container.port_allocator.allocatePort()
 
         # 2. 准备 NAS 目录
-        nasPath = container.nas_manager.prepareDirectory(domainID, sandboxID, projectName)
+        nasPath = container.nas_manager.prepareDirectory(domainID, sandboxID)
 
         # 3. 启动 Bubblewrap 沙箱
-        pid, password = container.bubblewrap_launcher.launchSandbox(domainID, sandboxID, nasPath, port, projectName)
+        pid, password = container.bubblewrap_launcher.launchSandbox(domainID, sandboxID, nasPath, port)
 
         # 4. 构建沙箱实例
         # 获取 engineHost
@@ -115,20 +115,25 @@ class SandboxManager:
             lastActiveAt=now
         )
 
-        # 5. 写入 Redis 元数据
-        metadata = {
-            "domainID": domainID,
-            "sandboxID": sandboxID,
-            "pid": pid,
-            "port": port,
-            "nasPath": nasPath,
-            "password": password,
-            "engineHost": engineHost,
-            "status": "running",
-            "createdAt": now,
-            "lastActiveAt": now
-        }
-        container.redis_client.setSandboxMetadata(domainID, sandboxID, metadata)
+        # 5. 写入 Redis 沙箱信息表
+        # 获取引擎URL
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+        except Exception:
+            ip = engineHost
+
+        engine_url = f"http://{ip}:{container.config_manager.loadConfig().enginePort}/trans"
+
+        container.redis_client.setSandboxInfo(
+            domain_id=domainID,
+            sandbox_id=sandboxID,
+            engine_url=engine_url,
+            timestamp=now,
+            last_request_time=now
+        )
 
         # 6. 存入内存
         container.set_sandbox_to_memory(sandbox)
@@ -154,17 +159,14 @@ class SandboxManager:
         if sandbox is None:
             return False
 
-        # 2. 更新状态为 destroying
-        container.redis_client.updateMetadata(domainID, sandboxID, status="destroying")
-
-        # 3. 终止进程
+        # 2. 终止进程
         container.bubblewrap_launcher.killSandbox(sandbox.pid)
 
-        # 4. 回收端口
+        # 3. 回收端口
         container.port_allocator.recyclePort(sandbox.port)
 
-        # 5. 删除 Redis 元数据
-        container.redis_client.deleteSandboxMetadata(domainID, sandboxID)
+        # 4. 删除 Redis 沙箱信息
+        container.redis_client.deleteSandboxInfo(domainID, sandboxID)
 
         # 6. 从内存移除
         container.remove_sandbox_from_memory(domainID, sandboxID)
@@ -189,7 +191,7 @@ class SandboxManager:
         if old_sandbox:
             # 只终止进程和移除内存，保留 NAS 数据
             container.bubblewrap_launcher.killSandbox(old_sandbox.pid)
-            container.redis_client.updateMetadata(domainID, sandboxID, status="destroying")
+            container.redis_client.deleteSandboxInfo(domainID, sandboxID)
             container.remove_sandbox_from_memory(domainID, sandboxID)
 
         # 2. 创建新沙箱
@@ -238,7 +240,7 @@ class SandboxManager:
                 results.append(False)
         return results
 
-    def getOrCreateSandbox(self, domainID: str, sandboxID: str, projectName: str = "defaultProject") -> Sandbox:
+    def getOrCreateSandbox(self, domainID: str, sandboxID: str) -> Sandbox:
         """
         获取或创建沙箱，若不存在则自动创建
 
@@ -247,7 +249,6 @@ class SandboxManager:
         Args:
             domainID: 租户标识
             sandboxID: 沙箱标识
-            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             Sandbox: 沙箱实例对象
@@ -255,6 +256,6 @@ class SandboxManager:
         sandbox = self.getSandbox(domainID, sandboxID)
 
         if sandbox is None:
-            sandbox = self.createSandbox(domainID, sandboxID, projectName)
+            sandbox = self.createSandbox(domainID, sandboxID)
 
         return sandbox

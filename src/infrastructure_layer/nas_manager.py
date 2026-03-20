@@ -24,9 +24,9 @@ class NasManager:
         """配置 NAS 根路径"""
         self._nas_root = nas_root
 
-    def prepareDirectory(self, domainID: str, sandboxID: str, projectName: str = "defaultProject") -> str:
+    def prepareDirectory(self, domainID: str, sandboxID: str) -> str:
         """
-        创建沙箱 NAS 目录结构,包括 data, config, projects/{projectName}, tmp 四个子目录,并设置权限
+        创建沙箱 NAS 目录结构，包括根目录及其子目录（data, config, workspace, tmp）
 
         流程: 3.2.1 - OpenCode API 代理主流程
         流程: 3.2.4 - 管理接口：创建沙箱
@@ -34,7 +34,6 @@ class NasManager:
         Args:
             domainID: 租户标识
             sandboxID: 沙箱标识
-            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             str: 创建的 NAS 根目录路径
@@ -46,23 +45,21 @@ class NasManager:
         sandbox_path = os.path.join(self._nas_root, domainID, sandboxID)
         data_dir = os.path.join(sandbox_path, "data")
         config_dir = os.path.join(sandbox_path, "config")
-        projects_dir = os.path.join(sandbox_path, "projects")
-        project_dir = os.path.join(projects_dir, projectName)
+        workspace_dir = os.path.join(sandbox_path, "workspace")
         tmp_dir = os.path.join(sandbox_path, "tmp")
 
         try:
             # 创建所有必需的目录
             os.makedirs(data_dir, exist_ok=True)
             os.makedirs(config_dir, exist_ok=True)
-            os.makedirs(project_dir, exist_ok=True)
+            os.makedirs(workspace_dir, exist_ok=True)
             os.makedirs(tmp_dir, exist_ok=True)
 
             # 设置权限 (可读可写可执行)
             os.chmod(sandbox_path, 0o777)
             os.chmod(data_dir, 0o777)
             os.chmod(config_dir, 0o777)
-            os.chmod(projects_dir, 0o777)
-            os.chmod(project_dir, 0o777)
+            os.chmod(workspace_dir, 0o777)
             os.chmod(tmp_dir, 0o777)
 
             return sandbox_path

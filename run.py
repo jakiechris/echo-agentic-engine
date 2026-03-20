@@ -17,8 +17,23 @@ def init_engine():
     """初始化引擎"""
     print("Initializing Echo Agentic Engine...")
 
+    # 加载基础配置文件
+    print("Loading configuration file...")
+    import json
+    with open("config.json", "r", encoding="utf-8") as f:
+        config_data = json.load(f)
+
+    # 配置 Redis 连接
+    redis_conf = config_data.get("redis", {})
+    print(f"Connecting to Redis at {redis_conf.get('host')}:{redis_conf.get('port')}...")
+    container.redis_client.configure(
+        host=redis_conf.get("host", "localhost"),
+        port=redis_conf.get("port", 6379),
+        password=redis_conf.get("password", ""),
+        db=redis_conf.get("db", 0)
+    )
+
     # 尝试连接 Redis
-    print("Connecting to Redis...")
     if container.redis_client.connectRedis():
         print("Redis connected successfully")
     else:

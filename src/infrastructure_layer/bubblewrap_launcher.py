@@ -37,9 +37,9 @@ class BubblewrapLauncher:
         """配置 OpenCode 命令路径"""
         self._opencode_command = opencode_command
 
-    def launchSandbox(self, domainID: str, sandboxID: str, nasPath: str, port: int, projectName: str = "defaultProject") -> Tuple[int, str]:
+    def launchSandbox(self, domainID: str, sandboxID: str, nasPath: str, port: int) -> Tuple[int, str]:
         """
-        构建正确的 Bubblewrap 命令启动沙箱进程,等待进程就绪后返回进程 ID 和密码
+        构建正确的 Bubblewrap 命令启动沙箱进程，等待进程就绪后返回进程 ID 和密码
 
         流程: 3.2.1 - OpenCode API 代理主流程
         流程: 3.2.4 - 管理接口：创建沙箱
@@ -47,9 +47,8 @@ class BubblewrapLauncher:
         Args:
             domainID: 租户标识
             sandboxID: 沙箱标识
-            nasPath: NAS 根目录路径
+            nasPath: NAS 根目录路径（沙箱根目录）
             port: 宿主机端口
-            projectName: 项目名称，默认为 defaultProject
 
         Returns:
             Tuple[int, str]: (pid, password) 进程 ID 和 OpenCode 访问密码 (UUID)
@@ -61,11 +60,11 @@ class BubblewrapLauncher:
         password = str(uuid.uuid4())
 
         # 构建用户数据目录路径
-        user_data_root = f"/data/users/{domainID}/{sandboxID}"
-        data_dir = f"{user_data_root}/data"
-        config_dir = f"{user_data_root}/config"
-        project_dir = f"{user_data_root}/projects/{projectName}"
-        tmp_dir = f"{user_data_root}/tmp"
+        # nasPath 是沙箱根目录，例如: /data/users/domainID/sandboxID
+        data_dir = os.path.join(nasPath, "data")
+        config_dir = os.path.join(nasPath, "config")
+        workspace_dir = os.path.join(nasPath, "workspace")
+        tmp_dir = os.path.join(nasPath, "tmp")
 
         # 构建 Bubblewrap 命令
         command = [
@@ -81,7 +80,7 @@ class BubblewrapLauncher:
             "--dev", "/dev",
             "--bind", data_dir, "/data",
             "--bind", config_dir, "/config",
-            "--bind", project_dir, "/workspace",
+            "--bind", workspace_dir, "/workspace",
             "--bind", tmp_dir, "/tmp",
             "--unshare-user",
             "--unshare-pid",

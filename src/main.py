@@ -8,6 +8,8 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import logging
+import os
+from pathlib import Path
 
 from .container import container
 from .router_layer.proxy_router import ProxyRouter
@@ -17,10 +19,27 @@ from .router_layer.create_sandbox_router import CreateSandboxRouter
 from .router_layer.destroy_sandbox_router import DestroySandboxRouter
 from .exceptions import EngineError
 
-# 配置日志
+# 创建日志目录
+log_dir = Path(__file__).parent.parent / "log"
+log_dir.mkdir(exist_ok=True)
+
+# 配置日志 - 输出到文件和控制台
+log_file = log_dir / "server.log"
+
+# 创建文件处理器
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# 创建控制台处理器
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# 配置根日志记录器
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    handlers=[file_handler, console_handler]
 )
 logger = logging.getLogger(__name__)
 
@@ -228,14 +247,10 @@ async def startup_event():
     container.request_proxy.configure(config.maxRetries * 60)
 
     # 5. 注册并启动后台任务
-    from .background_tasks.health_check_task import HealthCheckTask
-    from .background_tasks.idle_cleanup_task import IdleCleanupTask
     from .background_tasks.config_sync_task import ConfigSyncTask
 
-    container.task_scheduler.registerTask(HealthCheckTask(), config.healthCheckInterval)
-    container.task_scheduler.registerTask(IdleCleanupTask(), config.idleCheckInterval)
+    # 只注册ConfigSyncTask，间隔为5秒
     container.task_scheduler.registerTask(ConfigSyncTask(), config.configSyncInterval)
-
     container.task_scheduler.startScheduler()
     logger.info("Background tasks started")
 

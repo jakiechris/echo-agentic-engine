@@ -49,10 +49,10 @@ class ConfigManager:
         # 从本地配置文件加载
         self._loadFromFile(config)
 
-        # 从 Redis 获取配置（覆盖本地配置）
-        redis_config = container.redis_client.fetchConfig()
-        if redis_config:
-            self._applyRedisConfig(config, redis_config)
+        # 不再从Redis读取配置，所有配置在config.json中
+        # redis_config = container.redis_client.fetchConfig()
+        # if redis_config:
+        #     self._applyRedisConfig(config, redis_config)
 
         # 验证配置合法性
         self._validate_config(config)
