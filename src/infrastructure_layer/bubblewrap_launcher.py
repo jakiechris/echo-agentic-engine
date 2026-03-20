@@ -177,6 +177,8 @@ class BubblewrapLauncher:
         Returns:
             bool: 是否终止成功
         """
+        process = self._processes.get(pid)
+
         try:
             # 检查进程是否存在
             try:
@@ -184,6 +186,11 @@ class BubblewrapLauncher:
             except OSError:
                 # 进程不存在
                 self._processes.pop(pid, None)
+                if process:
+                    try:
+                        process.wait()  # 回收僵尸进程
+                    except:
+                        pass
                 return True
 
             # 发送 SIGTERM 信号
@@ -203,6 +210,11 @@ class BubblewrapLauncher:
                 except OSError:
                     # 进程已退出
                     self._processes.pop(pid, None)
+                    if process:
+                        try:
+                            process.wait()  # 回收僵尸进程
+                        except:
+                            pass
                     return True
 
             # 超时，发送 SIGKILL 强制终止
@@ -211,9 +223,14 @@ class BubblewrapLauncher:
             except (OSError, ProcessLookupError):
                 os.kill(pid, signal.SIGKILL)
 
-            # 等待进程退出
+            # 等待进程退出并回收
             time.sleep(1)
             self._processes.pop(pid, None)
+            if process:
+                try:
+                    process.wait()  # 回收僵尸进程
+                except:
+                    pass
             return True
 
         except Exception:

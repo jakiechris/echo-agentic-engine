@@ -17,8 +17,8 @@ async function test() {
     console.log('=== 测试发送Prompt并接收流式响应 ===\n');
 
     const ENGINE_HOST = 'http://localhost:8000';
-    const DOMAIN_ID = 'test';
-    const SANDBOX_ID = 'test';
+    const DOMAIN_ID = 'new-test';
+    const SANDBOX_ID = 'new-sandbox';
 
     // 1. 订阅事件流
     console.log('1. 订阅事件流...');

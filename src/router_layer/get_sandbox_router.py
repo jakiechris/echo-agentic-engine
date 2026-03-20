@@ -7,7 +7,7 @@ CleanupSandboxRouter 模块
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
@@ -68,13 +68,21 @@ class GetSandboxRouter:
             sandboxes = container.sandbox_manager.listAllSandboxes()
 
             # 4. 找出空闲超过指定时长的沙箱
-            cutoff_time = datetime.utcnow() - timedelta(seconds=idle_seconds)
-            cutoff_str = cutoff_time.isoformat() + "Z"
+            cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=idle_seconds)
+            cutoff_str = cutoff_time.isoformat()
 
             to_destroy = []
             for sandbox in sandboxes:
                 try:
-                    last_active_str = sandbox.lastActiveAt
+                    # 从Redis获取真实的最后请求时间
+                    redis_info = container.redis_client.getSandboxInfo(sandbox.domainID, sandbox.sandboxID)
+                    if redis_info and "lastRequestTime" in redis_info:
+                        last_active_str = redis_info["lastRequestTime"]
+                    else:
+                        # 如果Redis中没有，使用沙箱对象的创建时间
+                        last_active_str = sandbox.createdAt
+
+                    # 解析时间字符串
                     if last_active_str.endswith('Z'):
                         last_active_str = last_active_str[:-1] + "+00:00"
                     last_active = datetime.fromisoformat(last_active_str)
@@ -83,7 +91,7 @@ class GetSandboxRouter:
                         to_destroy.append(sandbox)
                         logger.info(
                             f"[CleanupSandbox] Sandbox {sandbox.domainID}/{sandbox.sandboxID} "
-                            f"idle since {sandbox.lastActiveAt}, marking for cleanup"
+                            f"idle since {last_active_str}, marking for cleanup"
                         )
                 except Exception as e:
                     logger.error(f"[CleanupSandbox] Error parsing time for sandbox: {e}")
